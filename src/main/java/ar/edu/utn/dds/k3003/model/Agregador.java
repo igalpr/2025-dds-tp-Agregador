@@ -32,7 +32,9 @@ public class Agregador {
         return fuente;
     }
 
-
+    public Boolean HasFachadaFuente(String Id) {
+    	return ListaFachadaFuente.containsKey(Id);
+    }
     private Fuente buscarFuentePorIdEnLista(String fuenteId) {
         return listaFuentes.stream()
                 .filter(f -> String.valueOf(f.getId()).equals(fuenteId))
