@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/coleccion")
 public class CollectionController {
 	private final Fachada fachadaAgregador;
 	
