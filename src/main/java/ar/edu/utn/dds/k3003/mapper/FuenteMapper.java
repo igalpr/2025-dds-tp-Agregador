@@ -8,12 +8,12 @@ public class FuenteMapper {
         if (fuente == null) {
             return null; 
         }
-        return new FuenteDTO(String.valueOf(fuente.getId()), fuente.getNombre(), fuente.getEndpoint());
+        return new FuenteDTO(fuente.getId(), fuente.getNombre(), fuente.getEndpoint());
     }
     public static Fuente toEntity(FuenteDTO fuenteDTO) {
         if (fuenteDTO == null) {
             return null; 
         }
-        return new Fuente(Integer.parseInt(fuenteDTO.id()), fuenteDTO.nombre(), fuenteDTO.endpoint());
+        return new Fuente(fuenteDTO.id(), fuenteDTO.nombre(), fuenteDTO.endpoint());
     }
 }

@@ -34,7 +34,7 @@ public class AgregadorTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        agregador = new Fachada(new InMemoryFuenteRepo());
+        agregador = new Fachada(new InMemoryFuenteRepo(), null);
     }
 
     @Test
