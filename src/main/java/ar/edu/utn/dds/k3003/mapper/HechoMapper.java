@@ -13,9 +13,7 @@ public class HechoMapper {
                 hecho.getId(),
                 hecho.getNombreColeccion(),
                 hecho.getTitulo(),
-                hecho.getEtiquetas(),
-                hecho.getCategoria(),
-                hecho.getUbicacion(),
+                null, null, hecho.getUbicacion(),
                 hecho.getFecha(),
                 hecho.getOrigen()
         );
@@ -29,8 +27,6 @@ public class HechoMapper {
                 dto.id(),
                 dto.nombreColeccion(),
                 dto.titulo(),
-                dto.etiquetas(),
-                dto.categoria(),
                 dto.ubicacion(),
                 dto.fecha(),
                 dto.origen()
