@@ -9,10 +9,10 @@ import retrofit2.http.GET;
 import retrofit2.http.Path;;
 
 public interface FuenteRetroFitClient{
-	@GET("/collection")
+	@GET("/colecciones")
 	Call<List<ColeccionDTO>> getCollecciones();
 	
-	@GET("/collection/{id}/hechos")
+	@GET("/coleccion/{id}/hechos")
 	Call<List<HechoDTO>> getHechosPorColleccion(@Path("id") String id);
 
 }
