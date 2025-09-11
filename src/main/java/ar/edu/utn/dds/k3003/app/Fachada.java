@@ -73,17 +73,24 @@ public class Fachada implements FachadaAgregador {
     @Override
     public List<HechoDTO> hechos(String coleccionId) throws NoSuchElementException {
         List<Fuente> fuentes = fuenteRepository.findAll();
-        agregador.setListaFuentes(fuentes);
+        agregador.setLista_fuentes(fuentes);
         
         for(Fuente fuente : fuentes) {
-        	if(!agregador.HasFachadaFuente(fuente.getId())) {
+        	logger.info("La fuente esta : "+agregador.getFachadaFuentes().containsKey(fuente.getId()));
+        	if(!agregador.getFachadaFuentes().containsKey(fuente.getId())) {
         		var proxy = new FuenteProxy(objectMapper, fuente.getEndpoint());
-                this.addFachadaFuentes(fuente.getId(), proxy);
+        		agregador.agregarFachadaAFuente(fuente.getId(), proxy);
+                logger.info(fuente.getEndpoint());
+        	}else
+        	{
+        		logger.info("La fuente " + fuente.getId()+ " Ya se encuentra en la lista");
         	}
         }
         
-        List<Hecho> hechosFiltrados = agregador.hechos(coleccionId);
-
+        List<Hecho> hechosFiltrados = agregador.obtenerHechosPorColeccion(coleccionId);
+        if(hechosFiltrados == null || hechosFiltrados.isEmpty()) {
+        	throw new NoSuchElementException("No se encontraron hechos para la coleccion : "+ coleccionId);
+        }
         return mappearHechoADTO(hechosFiltrados);
     }
     public List<HechoDTO> mappearHechoADTO(List<Hecho> hechos) {
@@ -94,11 +101,11 @@ public class Fachada implements FachadaAgregador {
 
     @Override
     public void addFachadaFuentes(String fuenteId, FachadaFuente fuente) {
-        agregador.addFachadaFuentes(fuenteId, fuente);
+        agregador.agregarFachadaAFuente(fuenteId, fuente);
     }
 
     @Override
     public void setConsensoStrategy(ConsensosEnum tipoConsenso, String coleccionId) throws InvalidParameterException {
-        agregador.setConsensoStrategy(tipoConsenso, coleccionId);
+        agregador.configurarConsenso(tipoConsenso, coleccionId);
     }
 }

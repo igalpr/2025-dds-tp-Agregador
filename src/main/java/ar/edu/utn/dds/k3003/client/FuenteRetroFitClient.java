@@ -12,7 +12,7 @@ public interface FuenteRetroFitClient{
 	@GET("/colecciones")
 	Call<List<ColeccionDTO>> getCollecciones();
 	
-	@GET("/coleccion/{id}/hechos")
-	Call<List<HechoDTO>> getHechosPorColleccion(@Path("id") String id);
+	@GET("/coleccion/{nombre}/hechos")
+	Call<List<HechoDTO>> getHechosPorColleccion(@Path("nombre") String id);
 
 }

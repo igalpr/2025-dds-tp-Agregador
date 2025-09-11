@@ -51,7 +51,12 @@ public class Hecho {
         this.fecha = fecha;
         this.origen = origen;
     }
+    public Hecho(String titulo, String id, String nombreColeccion) {
+    	this.id = id;
+        this.nombreColeccion = nombreColeccion;
+        this.titulo = titulo;
 
+    }
     // Getters y setters
     public String getId() {
         return id;

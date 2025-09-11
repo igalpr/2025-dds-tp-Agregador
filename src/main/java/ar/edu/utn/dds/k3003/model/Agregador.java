@@ -1,120 +1,98 @@
 package ar.edu.utn.dds.k3003.model;
 
-import ar.edu.utn.dds.k3003.client.*;
-import ar.edu.utn.dds.k3003.model.*;
-import ar.edu.utn.dds.k3003.repository.FuenteRepository;
-import ar.edu.utn.dds.k3003.repository.InMemoryFuenteRepo;
-import lombok.Data;
-import ar.edu.utn.dds.k3003.facades.FachadaAgregador;
-import ar.edu.utn.dds.k3003.facades.FachadaFuente;
-import ar.edu.utn.dds.k3003.facades.dtos.*;
-import ar.edu.utn.dds.k3003.mapper.*;
-import java.security.InvalidParameterException;
-import java.util.stream.Collectors;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
 import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+import ar.edu.utn.dds.k3003.facades.FachadaFuente;
+import ar.edu.utn.dds.k3003.facades.dtos.ConsensosEnum;
+import ar.edu.utn.dds.k3003.facades.dtos.HechoDTO;
+import lombok.Data;
 
 @Data
 public class Agregador {
-	private final Map<String, FachadaFuente> ListaFachadaFuente = new HashMap<>();
-	private final Map<String, ConsensosEnum> consensoPorColeccion = new HashMap<>();
-	private List<Fuente> listaFuentes= new ArrayList();  
-	private static final Logger logger = LoggerFactory.getLogger(Agregador.class);
-	public Agregador() { 
+
+    private List<Fuente> lista_fuentes = new ArrayList<>();
+    private Map<String, FachadaFuente> fachadaFuentes = new HashMap<>();
+    private Map<String, ConsensosEnum> tipoConsensoXColeccion = new HashMap<>();
+
+    public Fuente agregarFuente(Fuente newFuente) {
+        lista_fuentes.add(newFuente);
+        return newFuente;
     }
 
-    public Fuente agregarFuente(Fuente fuente) {
-        listaFuentes.add(fuente);
-        return fuente;
+    public void configurarConsenso(ConsensosEnum consenso, String nombreColeccion) {
+        tipoConsensoXColeccion.put(nombreColeccion, consenso);
     }
 
-    public Boolean HasFachadaFuente(String Id) {
-    	return ListaFachadaFuente.containsKey(Id);
-    }
-    private Fuente buscarFuentePorIdEnLista(String fuenteId) {
-        return listaFuentes.stream()
-                .filter(f -> String.valueOf(f.getId()).equals(fuenteId))
-                .findFirst().orElse(null);
-    }
+    private List<Hecho> obtenerHechosDeTodasLasFuentes(String nombreColeccion) {
+        List<Hecho> hechos = new ArrayList<>();
 
-    
-    public List<Hecho> hechos(String coleccionId) throws NoSuchElementException {
-        if (ListaFachadaFuente.isEmpty()) {
-            throw new NoSuchElementException("No hay fuentes cargadas");
-        }
+        for (Fuente fuente : lista_fuentes) {
+            FachadaFuente fachada = fachadaFuentes.get(fuente.getId());
 
-        Map<String, Integer> conteoHechos = new HashMap<>();
-        Map<String, Hecho> hechosUnicos = new HashMap<>();
-
-        
-    	List<Hecho> hechos = getHechosFromFuentesByCollection(coleccionId);
-            for (Hecho hecho : hechos) {
-                String titulo = hecho.getTitulo();
-                conteoHechos.put(titulo, conteoHechos.getOrDefault(titulo, 0) + 1);
-                hechosUnicos.putIfAbsent(titulo, hecho);
-            }
-        
-
-        List<Hecho> hechosFiltrados;
-
-        if (ListaFachadaFuente.size() == 1) {
-            hechosFiltrados = new ArrayList<>(hechosUnicos.values());
-        } else {
-            ConsensosEnum consenso =consensoPorColeccion.getOrDefault(coleccionId, ConsensosEnum.TODOS);
-
-            switch (consenso) {
-                case TODOS:
-                    hechosFiltrados = new ArrayList<>(hechosUnicos.values());
-                    break;
-                case AL_MENOS_2:
-                    hechosFiltrados = hechosUnicos.values().stream()
-                            .filter(h -> conteoHechos.getOrDefault(h.getTitulo(), 0) >= 2)
-                            .toList();
-                    break;
-                default:
-                    hechosFiltrados = new ArrayList<>(hechosUnicos.values());
+            if (fachada != null) {
+                try {
+                    List<HechoDTO> hechosDTO = fachada.buscarHechosXColeccion(nombreColeccion);
+                    hechos.addAll(
+                            hechosDTO.stream()
+                                    .map(dto -> {
+                                        Hecho hecho = new Hecho(dto.titulo(), dto.id(), dto.nombreColeccion());
+                                        hecho.setOrigen(fuente.getId());
+                                        return hecho;
+                                    }).toList());
+                } catch (NoSuchElementException e) {
+                    continue;
+                }
             }
         }
 
-        return hechosFiltrados;
+        return hechos;
     }
-    private List<Hecho> getHechosFromFuentesByCollection(String coleccionId){
-    	List<Hecho> hechos = new ArrayList<>();
-    	for (FachadaFuente fuente : ListaFachadaFuente.values()) {
-        	List<HechoDTO> hechosDTOS = fuente.buscarHechosXColeccion(coleccionId); 
-        	hechos.addAll(hechosDTOS.stream()
-                    .map(HechoMapper::toEntity)
-                    .toList());
-    	}
-    	return hechos;
-    }
-    public void addFachadaFuentes(String fuenteId, FachadaFuente fuente) {
-        if (buscarFuentePorIdEnLista(fuenteId)== null) {
-            throw new NoSuchElementException("La fuente DTO con id " + fuenteId + " no existe para mapear FachadaFuente");
+
+    public List<Hecho> obtenerHechosPorColeccion(String nombreColeccion) {
+        ConsensosEnum estrategia = tipoConsensoXColeccion.containsKey(nombreColeccion) ? tipoConsensoXColeccion.get(nombreColeccion) : ConsensosEnum.TODOS;
+        List<Hecho> hechos = obtenerHechosDeTodasLasFuentes(nombreColeccion);
+        Map<String, Hecho> hechosUnicos = hechos.stream()
+                .collect(Collectors.toMap(
+                        Hecho::getTitulo,
+                        Function.identity(),
+                        (existente, nuevo) -> existente));
+        switch (estrategia) {
+            case TODOS:
+                return new ArrayList<>(hechosUnicos.values());
+            case AL_MENOS_2:
+                if (lista_fuentes.size() == 1) {
+                    return new ArrayList<>(hechosUnicos.values());
+                } else {
+                    Set<String> titulos_Repetidos = hechos.stream()
+                            .collect(Collectors.groupingBy(Hecho::getTitulo,
+                                    Collectors.mapping(Hecho::getOrigen, Collectors.toSet())))
+                            .entrySet().stream()
+                            .filter(e -> e.getValue().size() >= 2)
+                            .map(Map.Entry::getKey)
+                            .collect(Collectors.toSet());
+                    return hechos.stream().filter(h -> titulos_Repetidos.contains(h.getTitulo()))
+                            .collect(Collectors.toMap(
+                                    Hecho::getTitulo, Function.identity(),
+                                    (h1, h2) -> h1))
+                            .values().stream().collect(Collectors.toList());
+                }
+            default:
+                throw new IllegalArgumentException("Estrategia no soportada: " + estrategia);
         }
-        ListaFachadaFuente.put(fuenteId, fuente);
     }
 
-    public void setConsensoStrategy(ConsensosEnum tipoConsenso, String coleccionId) throws InvalidParameterException {
-        if (tipoConsenso == null || coleccionId == null || coleccionId.isEmpty()) {
-            throw new InvalidParameterException("Tipo de consenso y coleccionId no pueden ser nulos o vacíos");
+    public void agregarFachadaAFuente(String fuenteId, FachadaFuente fuente) {
+        Fuente existe_Fuente = lista_fuentes.stream()
+                .filter(f -> f.getId().equals(fuenteId))
+                .findAny()
+                .orElse(null);
+
+        if (existe_Fuente == null) {
+            throw new NoSuchElementException("No se encontro la fuente");
         }
-        consensoPorColeccion.put(coleccionId, tipoConsenso);
+        fachadaFuentes.put(fuenteId, fuente);
+        existe_Fuente.setFachadaFuente(fuente);
     }
-
-	public List<Fuente> getListaFuentes() {
-		return listaFuentes;
-	}
-
-	public void setListaFuentes(List<Fuente> listaFuentes) {
-		this.listaFuentes = listaFuentes;
-	}
-
-	public static Logger getLogger() {
-		return logger;
-	}
 }
