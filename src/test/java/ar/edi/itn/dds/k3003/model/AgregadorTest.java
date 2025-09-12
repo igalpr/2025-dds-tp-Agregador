@@ -5,7 +5,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import ar.edu.utn.dds.k3003.Evaluador;
 import ar.edu.utn.dds.k3003.facades.FachadaFuente;
 import ar.edu.utn.dds.k3003.app.Fachada;
 import ar.edu.utn.dds.k3003.facades.dtos.ConsensosEnum;
@@ -34,7 +33,7 @@ public class AgregadorTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        agregador = new Fachada(new InMemoryFuenteRepo(), null);
+        agregador = new Fachada(new InMemoryFuenteRepo(), null, null);
     }
 
     @Test

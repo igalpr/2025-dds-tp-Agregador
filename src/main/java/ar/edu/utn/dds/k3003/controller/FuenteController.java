@@ -1,6 +1,7 @@
 package ar.edu.utn.dds.k3003.controller;
 
 import ar.edu.utn.dds.k3003.facades.dtos.FuenteDTO;
+import io.micrometer.core.annotation.Timed;
 import ar.edu.utn.dds.k3003.app.Fachada;
 import java.util.List;
 
@@ -21,6 +22,7 @@ public class FuenteController {
     public FuenteController(Fachada fachadaAgregador) {
         this.fachadaAgregador = fachadaAgregador;
     }
+    @Timed(value = "fuentes.get", description = "Time taken to return all fuentes")
     @GetMapping
     public ResponseEntity<List<FuenteDTO>> getFuentes(){
     	return ResponseEntity.ok(fachadaAgregador.fuentes());

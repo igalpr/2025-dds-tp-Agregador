@@ -3,7 +3,9 @@ package ar.edu.utn.dds.k3003.app;
 import ar.edu.utn.dds.k3003.client.*;
 import ar.edu.utn.dds.k3003.model.*;
 import ar.edu.utn.dds.k3003.repository.FuenteRepository;
-import ar.edu.utn.dds.k3003.repository.InMemoryFuenteRepo;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
+import lombok.extern.slf4j.Slf4j;
 import ar.edu.utn.dds.k3003.facades.FachadaAgregador;
 import ar.edu.utn.dds.k3003.facades.FachadaFuente;
 import ar.edu.utn.dds.k3003.facades.dtos.*;
@@ -14,44 +16,64 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
+import org.springframework.transaction.annotation.Transactional;
+import io.micrometer.core.instrument.Timer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.*;
 
+@Slf4j
 @Service
+@Transactional
 public class Fachada implements FachadaAgregador {
 	private Agregador agregador = new Agregador();
 	private FuenteRepository fuenteRepository;
 	private ObjectMapper objectMapper;
+	private final Counter FuentesCreadas;
+    private final Counter erroresDominio;
+    private final Timer   tiempoAltaFuente;
 	private static final Logger logger = LoggerFactory.getLogger(Fachada.class);
-	public Fachada() {
+	/*public Fachada() {
 		objectMapper = new com.fasterxml.jackson.databind.ObjectMapper();
 		this.fuenteRepository = new InMemoryFuenteRepo();
-    }
+		this.tiempoAltaFuente = new Timer();
+    }*/
 
 	@Autowired
-	  public Fachada(FuenteRepository fuenteRepository,ObjectMapper objectMapper) {
+	  public Fachada(FuenteRepository fuenteRepository,ObjectMapper objectMapper,MeterRegistry meterRegistry) {
 	     logger.info("Initializing Fachada with FuenteRepository: {}", fuenteRepository.getClass().getSimpleName());
 	    this.fuenteRepository = fuenteRepository;
 	    this.objectMapper = objectMapper;
+	    this.FuentesCreadas = Counter.builder("agregador.fuentes.creadas")
+                .description("Cantidad de fuentes creadas").register(meterRegistry);
+
+        this.erroresDominio = Counter.builder("agregador.errores")
+                .description("Errores de negocio en Agregador").register(meterRegistry);
+
+        this.tiempoAltaFuente = Timer.builder("agregador.hechos.alta.tiempo")
+                .description("Tiempo de alta de fuente").register(meterRegistry);
 	  }
 
     @Override
     public FuenteDTO agregar(FuenteDTO fuente) {
-        if (fuente == null) {
-            throw new InvalidParameterException("No se puede agregar una fuente nula");
-        }
-        FuenteDTO nuevaFuenteDto = new FuenteDTO(String.valueOf(fuenteRepository.findAll().size()+1), fuente.nombre(), fuente.endpoint());
-        Fuente nuevaFuente = new Fuente(nuevaFuenteDto.id(), fuente.nombre(), fuente.endpoint());
-        fuenteRepository.save(nuevaFuente);
-        agregador.agregarFuente(nuevaFuente);
-        var proxy = new FuenteProxy(objectMapper, nuevaFuente.getEndpoint());
-        this.addFachadaFuentes(nuevaFuente.getId(), proxy);
-        return nuevaFuenteDto;
+    	return tiempoAltaFuente.record(() -> {
+    	    if (fuente == null) {
+    	        erroresDominio.increment();
+    	        throw new InvalidParameterException("No se puede agregar una fuente nula");
+    	    }
+    	    FuenteDTO nuevaFuenteDto = new FuenteDTO(String.valueOf(fuenteRepository.findAll().size() + 1), fuente.nombre(), fuente.endpoint());
+    	    Fuente nuevaFuente = new Fuente(nuevaFuenteDto.id(), fuente.nombre(), fuente.endpoint());
+    	    fuenteRepository.save(nuevaFuente);
+    	    agregador.agregarFuente(nuevaFuente);
+    	    var proxy = new FuenteProxy(objectMapper, nuevaFuente.getEndpoint());
+    	    this.addFachadaFuentes(nuevaFuente.getId(), proxy);
+    	    FuentesCreadas.increment();
+    	    return nuevaFuenteDto;
+    	});
+
     }
 
-    @Override
+    @Override  @Transactional(readOnly = true)
     public List<FuenteDTO> fuentes() {
         return Collections.unmodifiableList(
         		fuenteRepository.findAll().stream()
@@ -60,7 +82,7 @@ public class Fachada implements FachadaAgregador {
         );    
     }
 
-    @Override
+    @Override  @Transactional(readOnly = true)
     public FuenteDTO buscarFuenteXId(String fuenteId) throws NoSuchElementException {
         return buscarFuentePorIdEnLista(fuenteId)
                 .orElseThrow(() -> new NoSuchElementException("Fuente no encontrada por id " + fuenteId));
@@ -70,7 +92,7 @@ public class Fachada implements FachadaAgregador {
         return fuenteRepository.findById(fuenteId).map(f -> new FuenteDTO(String.valueOf(f.getId()), f.getNombre(), f.getEndpoint()));
     }
 
-    @Override
+    @Override  @Transactional(readOnly = true)
     public List<HechoDTO> hechos(String coleccionId) throws NoSuchElementException {
         List<Fuente> fuentes = fuenteRepository.findAll();
         agregador.setLista_fuentes(fuentes);
