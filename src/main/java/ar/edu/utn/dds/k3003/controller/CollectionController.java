@@ -2,6 +2,7 @@ package ar.edu.utn.dds.k3003.controller;
 
 import ar.edu.utn.dds.k3003.facades.dtos.HechoDTO;
 import ar.edu.utn.dds.k3003.model.ErrorResponse;
+import io.micrometer.core.annotation.Timed;
 import ar.edu.utn.dds.k3003.app.Fachada;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -26,6 +27,7 @@ public class CollectionController {
     public CollectionController(Fachada fachadaAgregador) {
         this.fachadaAgregador = fachadaAgregador;
     }
+    @Timed(value = "hechos.get", description = "Time taken to return all hechos by collection")
     @GetMapping("/{nombre}/hechos")
     public ResponseEntity<?> getHechos(@PathVariable String nombre){
     	try {
