@@ -46,7 +46,7 @@ public class CollectionController {
         	ColeccionNotFoundCounter.increment();
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(new ErrorResponse("COLLECTION_NOT_FOUND", 
-                         "No se encontraron fuentes disponibles"));
+                         "No se encontro la coleccion en las fuentes disponibles"));
         } catch (Exception e) {
         	ServerErrorCounter.increment();
         	logger.error(e.getMessage());
