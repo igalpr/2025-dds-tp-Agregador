@@ -2,8 +2,6 @@ package ar.edu.utn.dds.k3003.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import ar.edu.utn.dds.k3003.facades.dtos.ConsensosEnum;
-
 public class ConsensoRequest {
     private ConsensosEnum tipo;
     @JsonProperty("coleccion")

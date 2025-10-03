@@ -5,11 +5,11 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import ar.edu.utn.dds.k3003.facades.FachadaFuente;
+import ar.edu.utn.dds.k3003.model.Fachada.*;
 import ar.edu.utn.dds.k3003.app.Fachada;
-import ar.edu.utn.dds.k3003.facades.dtos.ConsensosEnum;
 import ar.edu.utn.dds.k3003.facades.dtos.FuenteDTO;
 import ar.edu.utn.dds.k3003.facades.dtos.HechoDTO;
+import ar.edu.utn.dds.k3003.model.ConsensosEnum;
 import ar.edu.utn.dds.k3003.repository.InMemoryFuenteRepo;
 
 import java.security.InvalidParameterException;
@@ -20,7 +20,7 @@ import java.util.Random;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-public class AgregadorTest {
+class AgregadorTest {
 
     private Fachada agregador;
 
@@ -115,7 +115,6 @@ public class AgregadorTest {
         when(fachadaFuenteMock1.buscarHechosXColeccion("col1")).thenReturn(hechosFuente1);
         when(fachadaFuenteMock2.buscarHechosXColeccion("col1")).thenReturn(hechosFuente2);
 
-        //agregador.setConsensoStrategy(ConsensosEnum.TODOS, "col1");
         List<HechoDTO> hechosTodos = agregador.hechos("col1");
 
         assertEquals(3, hechosTodos.size());
@@ -156,8 +155,6 @@ public class AgregadorTest {
     	setUp();
         assertThrows(NoSuchElementException.class, () ->
                 agregador.hechos("col1"));
-
-        FuenteDTO fuente = agregador.agregar(new FuenteDTO("", "Fuente1", "endpoint1"));
         }
 
 }

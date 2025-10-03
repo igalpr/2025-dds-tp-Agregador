@@ -3,7 +3,7 @@ package ar.edu.utn.dds.k3003.model;
 import java.util.ArrayList;
 import java.util.List;
 
-import ar.edu.utn.dds.k3003.facades.FachadaFuente;
+import ar.edu.utn.dds.k3003.model.Fachada.*;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

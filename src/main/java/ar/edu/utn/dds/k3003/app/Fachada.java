@@ -6,12 +6,11 @@ import ar.edu.utn.dds.k3003.repository.FuenteRepository;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import lombok.extern.slf4j.Slf4j;
-import ar.edu.utn.dds.k3003.facades.FachadaAgregador;
-import ar.edu.utn.dds.k3003.facades.FachadaFuente;
-import ar.edu.utn.dds.k3003.facades.dtos.*;
+import ar.edu.utn.dds.k3003.model.Fachada.*;
+import ar.edu.utn.dds.k3003.facades.dtos.FuenteDTO;
+import ar.edu.utn.dds.k3003.facades.dtos.HechoDTO;
 import ar.edu.utn.dds.k3003.mapper.*;
 import java.security.InvalidParameterException;
-import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,22 +28,18 @@ public class Fachada implements FachadaAgregador {
 	private Agregador agregador = new Agregador();
 	private FuenteRepository fuenteRepository;
 	private ObjectMapper objectMapper;
-	private final Counter FuentesCreadas;
+	private final Counter fuentesCreadas;
     private final Counter erroresDominio;
     private final Timer   tiempoAltaFuente;
 	private static final Logger logger = LoggerFactory.getLogger(Fachada.class);
-	/*public Fachada() {
-		objectMapper = new com.fasterxml.jackson.databind.ObjectMapper();
-		this.fuenteRepository = new InMemoryFuenteRepo();
-		this.tiempoAltaFuente = new Timer();
-    }*/
+
 
 	@Autowired
 	  public Fachada(FuenteRepository fuenteRepository,ObjectMapper objectMapper,MeterRegistry meterRegistry) {
 	     logger.info("Initializing Fachada with FuenteRepository: {}", fuenteRepository.getClass().getSimpleName());
 	    this.fuenteRepository = fuenteRepository;
 	    this.objectMapper = objectMapper;
-	    this.FuentesCreadas = Counter.builder("agregador.fuentes.creadas")
+	    this.fuentesCreadas = Counter.builder("agregador.fuentes.creadas")
                 .description("Cantidad de fuentes creadas").register(meterRegistry);
 
         this.erroresDominio = Counter.builder("agregador.errores")
@@ -67,7 +62,7 @@ public class Fachada implements FachadaAgregador {
     	    agregador.agregarFuente(nuevaFuente);
     	    var proxy = new FuenteProxy(objectMapper, nuevaFuente.getEndpoint());
     	    this.addFachadaFuentes(nuevaFuente.getId(), proxy);
-    	    FuentesCreadas.increment();
+    	    fuentesCreadas.increment();
     	    return nuevaFuenteDto;
     	});
 
@@ -78,7 +73,7 @@ public class Fachada implements FachadaAgregador {
         return Collections.unmodifiableList(
         		fuenteRepository.findAll().stream()
                         .map(FuenteMapper::toDTO)
-                        .collect(Collectors.toList())
+                        .toList()
         );    
     }
 
@@ -95,10 +90,9 @@ public class Fachada implements FachadaAgregador {
     @Override  @Transactional(readOnly = true)
     public List<HechoDTO> hechos(String coleccionId) throws NoSuchElementException {
         List<Fuente> fuentes = fuenteRepository.findAll();
-        agregador.setLista_fuentes(fuentes);
+        agregador.setListFuentes(fuentes);
         
         for(Fuente fuente : fuentes) {
-        	logger.info("La fuente esta : "+agregador.getFachadaFuentes().containsKey(fuente.getId()));
         	if(!agregador.getFachadaFuentes().containsKey(fuente.getId())) {
         		var proxy = new FuenteProxy(objectMapper, fuente.getEndpoint());
         		agregador.agregarFachadaAFuente(fuente.getId(), proxy);
@@ -118,16 +112,16 @@ public class Fachada implements FachadaAgregador {
     public List<HechoDTO> mappearHechoADTO(List<Hecho> hechos) {
         return hechos.stream()
                 .map(HechoMapper::toDTO)
-                .collect(Collectors.toList());
+                .toList();
     }
-
     @Override
     public void addFachadaFuentes(String fuenteId, FachadaFuente fuente) {
         agregador.agregarFachadaAFuente(fuenteId, fuente);
     }
-
     @Override
     public void setConsensoStrategy(ConsensosEnum tipoConsenso, String coleccionId) throws InvalidParameterException {
         agregador.configurarConsenso(tipoConsenso, coleccionId);
     }
+
+	
 }

@@ -1,34 +1,32 @@
 package ar.edu.utn.dds.k3003.model;
 
 import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
-import ar.edu.utn.dds.k3003.facades.FachadaFuente;
-import ar.edu.utn.dds.k3003.facades.dtos.ConsensosEnum;
+import ar.edu.utn.dds.k3003.model.Fachada.*;
 import ar.edu.utn.dds.k3003.facades.dtos.HechoDTO;
+import ar.edu.utn.dds.k3003.model.Estrategia.*;
 import lombok.Data;
 
 @Data
 public class Agregador {
 
-    private List<Fuente> lista_fuentes = new ArrayList<>();
+    private List<Fuente> listFuentes = new ArrayList<>();
     private Map<String, FachadaFuente> fachadaFuentes = new HashMap<>();
     private Map<String, ConsensosEnum> tipoConsensoXColeccion = new HashMap<>();
-
+    private EstrategiaContext contexto = new EstrategiaContext();
     public Fuente agregarFuente(Fuente newFuente) {
-        lista_fuentes.add(newFuente);
+        listFuentes.add(newFuente);
         return newFuente;
     }
 
-    public void configurarConsenso(ConsensosEnum consenso, String nombreColeccion) {
-        tipoConsensoXColeccion.put(nombreColeccion, consenso);
+    public void configurarConsenso(ar.edu.utn.dds.k3003.model.ConsensosEnum tipoConsenso, String nombreColeccion) {
+        tipoConsensoXColeccion.put(nombreColeccion, tipoConsenso);
     }
 
     private List<Hecho> obtenerHechosDeTodasLasFuentes(String nombreColeccion) {
         List<Hecho> hechos = new ArrayList<>();
 
-        for (Fuente fuente : lista_fuentes) {
+        for (Fuente fuente : listFuentes) {
             FachadaFuente fachada = fachadaFuentes.get(fuente.getId());
 
             if (fachada != null) {
@@ -42,7 +40,6 @@ public class Agregador {
                                         return hecho;
                                     }).toList());
                 } catch (NoSuchElementException e) {
-                    continue;
                 }
             }
         }
@@ -51,48 +48,36 @@ public class Agregador {
     }
 
     public List<Hecho> obtenerHechosPorColeccion(String nombreColeccion) {
-        ConsensosEnum estrategia = tipoConsensoXColeccion.containsKey(nombreColeccion) ? tipoConsensoXColeccion.get(nombreColeccion) : ConsensosEnum.TODOS;
+        ConsensosEnum estrategiaEnum = tipoConsensoXColeccion.containsKey(nombreColeccion) ? tipoConsensoXColeccion.get(nombreColeccion) : ConsensosEnum.TODOS;
         List<Hecho> hechos = obtenerHechosDeTodasLasFuentes(nombreColeccion);
-        Map<String, Hecho> hechosUnicos = hechos.stream()
-                .collect(Collectors.toMap(
-                        Hecho::getTitulo,
-                        Function.identity(),
-                        (existente, nuevo) -> existente));
-        switch (estrategia) {
-            case TODOS:
-                return new ArrayList<>(hechosUnicos.values());
-            case AL_MENOS_2:
-                if (lista_fuentes.size() == 1) {
-                    return new ArrayList<>(hechosUnicos.values());
-                } else {
-                    Set<String> titulos_Repetidos = hechos.stream()
-                            .collect(Collectors.groupingBy(Hecho::getTitulo,
-                                    Collectors.mapping(Hecho::getOrigen, Collectors.toSet())))
-                            .entrySet().stream()
-                            .filter(e -> e.getValue().size() >= 2)
-                            .map(Map.Entry::getKey)
-                            .collect(Collectors.toSet());
-                    return hechos.stream().filter(h -> titulos_Repetidos.contains(h.getTitulo()))
-                            .collect(Collectors.toMap(
-                                    Hecho::getTitulo, Function.identity(),
-                                    (h1, h2) -> h1))
-                            .values().stream().collect(Collectors.toList());
-                }
-            default:
-                throw new IllegalArgumentException("Estrategia no soportada: " + estrategia);
+        EstrategiaConsenso estrategia;
+        switch (estrategiaEnum) {
+        case TODOS:
+            estrategia = new EstrategiaTodos();
+            break;
+        case ESTRICTO:
+            estrategia = new EstrategiaEstricta(fachadaFuentes);
+            break;
+        case AL_MENOS_2:
+            estrategia = new EstrategiaAlMenos2();
+            break;
+        default:
+            throw new IllegalArgumentException("Estrategia no soportada: " + estrategiaEnum);
         }
+        contexto.setEstrategia(estrategia);
+        return contexto.filtrar(hechos, listFuentes.stream().map(Fuente::getId).toList());        
     }
 
     public void agregarFachadaAFuente(String fuenteId, FachadaFuente fuente) {
-        Fuente existe_Fuente = lista_fuentes.stream()
+        Fuente existeFuente = listFuentes.stream()
                 .filter(f -> f.getId().equals(fuenteId))
                 .findAny()
                 .orElse(null);
 
-        if (existe_Fuente == null) {
+        if (existeFuente == null) {
             throw new NoSuchElementException("No se encontro la fuente");
         }
         fachadaFuentes.put(fuenteId, fuente);
-        existe_Fuente.setFachadaFuente(fuente);
+        existeFuente.setFachadaFuente(fuente);
     }
 }

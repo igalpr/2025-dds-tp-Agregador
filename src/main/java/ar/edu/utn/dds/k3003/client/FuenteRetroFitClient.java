@@ -14,5 +14,7 @@ public interface FuenteRetroFitClient{
 	
 	@GET("/coleccion/{nombre}/hechos")
 	Call<List<HechoDTO>> getHechosPorColleccion(@Path("nombre") String id);
-
+	
+	@GET("/hechos/sin-solicitudes")
+	Call<List<HechoDTO>> getHechosSinSolicitud();
 }

@@ -1,6 +1,5 @@
 package ar.edu.utn.dds.k3003.model;
 
-import ar.edu.utn.dds.k3003.facades.FachadaFuente;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import lombok.Data;

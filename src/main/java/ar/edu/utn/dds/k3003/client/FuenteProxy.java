@@ -1,7 +1,7 @@
 package ar.edu.utn.dds.k3003.client;
 
 import ar.edu.utn.dds.k3003.app.Fachada;
-import ar.edu.utn.dds.k3003.facades.FachadaFuente;
+import ar.edu.utn.dds.k3003.model.Fachada.*;
 import ar.edu.utn.dds.k3003.facades.FachadaProcesadorPdI;
 import ar.edu.utn.dds.k3003.facades.dtos.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -64,6 +64,19 @@ public class FuenteProxy implements FachadaFuente {
 
 			throw new RuntimeException("Fallo la comunicacion con la fuente");
 		}
+  }
+  public List<HechoDTO> getHechosSinSolicitud() throws NoSuchElementException {
+	  try {
+			var response = service.getHechosSinSolicitud().execute();
+			if(response.isSuccessful() && response.body() != null) {
+				return response.body();
+			}
+			throw new RuntimeException("Error al obtener los hechos sin solicitud , error " + response.code());
+  }catch(Exception e) {
+		logger.error(e.getMessage());
+
+		throw new RuntimeException("Fallo la comunicacion con la fuente");
+	}
   }
   @Override
   public ColeccionDTO buscarColeccionXId(String coleccionId) throws NoSuchElementException {
