@@ -51,6 +51,9 @@ public class FuenteProxy implements FachadaFuente {
 			if(response.isSuccessful() && response.body() != null) {
 				return response.body();
 			}
+			if(response.code() == HttpStatus.REQUEST_TIMEOUT_408) {
+				return Collections.emptyList();
+			}
 			if(response.code() ==HttpStatus.NOT_FOUND_404) {
 				throw new NotFoundException();
 			}

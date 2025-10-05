@@ -36,7 +36,7 @@ public class CollectionController {
 		this.ServerErrorCounter = meterRegistry.counter("coleccion.server.errors");
     }
     @Timed(value = "hechos.get", description = "Time taken to return all hechos by collection")
-    @GetMapping("/{nombre}/hechos")
+    @GetMapping(value = "/{nombre}/hechos",produces = "application/json")
     public ResponseEntity<?> getHechos(@PathVariable String nombre){
     	hechosRequestCounter.increment();
     	try {

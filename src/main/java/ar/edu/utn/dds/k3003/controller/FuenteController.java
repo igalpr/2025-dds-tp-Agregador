@@ -23,11 +23,11 @@ public class FuenteController {
         this.fachadaAgregador = fachadaAgregador;
     }
     @Timed(value = "fuentes.get", description = "Time taken to return all fuentes")
-    @GetMapping
+    @GetMapping(produces = "application/json")
     public ResponseEntity<List<FuenteDTO>> getFuentes(){
     	return ResponseEntity.ok(fachadaAgregador.fuentes());
     }
-    @PostMapping
+    @PostMapping(produces = "application/json")
     public ResponseEntity<FuenteDTO> crearFuente(@RequestBody FuenteDTO fuente) {
         return ResponseEntity.ok(fachadaAgregador.agregar(fuente));
     }
