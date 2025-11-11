@@ -1,5 +1,8 @@
 package ar.edu.utn.dds.k3003.controller;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import ar.edu.utn.dds.k3003.facades.dtos.HechoDTO;
 import ar.edu.utn.dds.k3003.model.ErrorResponse;
 import io.micrometer.core.annotation.Timed;
@@ -37,11 +40,17 @@ public class CollectionController {
     }
     @Timed(value = "hechos.get", description = "Time taken to return all hechos by collection")
     @GetMapping(value = "/{nombre}/hechos",produces = "application/json")
-    public ResponseEntity<?> getHechos(@PathVariable String nombre){
+    public ResponseEntity<?> getHechos(@PathVariable String nombre, @PageableDefault(page = 0, size = 20) Pageable pageable){
     	hechosRequestCounter.increment();
     	try {
             List<HechoDTO> hechos = fachadaAgregador.hechos(nombre);
-            return ResponseEntity.ok(hechos);
+            int start = (int) pageable.getOffset();
+            int end = Math.min(start + pageable.getPageSize(), hechos.size());
+            List<HechoDTO> subList = hechos.subList(start, end);
+            Page<HechoDTO> hechosPage = new PageImpl<>(subList, pageable, hechos.size());
+            
+            return ResponseEntity.ok(hechosPage);
+
         } catch (NoSuchElementException e) {
         	ColeccionNotFoundCounter.increment();
             return ResponseEntity.status(HttpStatus.NOT_FOUND)

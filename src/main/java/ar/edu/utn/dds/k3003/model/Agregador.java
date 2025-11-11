@@ -3,6 +3,7 @@ package ar.edu.utn.dds.k3003.model;
 import java.util.*;
 
 import ar.edu.utn.dds.k3003.model.Fachada.*;
+import ar.edu.utn.dds.k3003.facades.dtos.ColeccionDTO;
 import ar.edu.utn.dds.k3003.facades.dtos.HechoDTO;
 import ar.edu.utn.dds.k3003.model.Estrategia.*;
 import lombok.Data;
@@ -28,9 +29,9 @@ public class Agregador {
 
         for (Fuente fuente : listFuentes) {
             FachadaFuente fachada = fachadaFuentes.get(fuente.getId());
-
             if (fachada != null) {
                 try {
+                	if(ColeccionEnFuente(fachada,nombreColeccion)) {
                     List<HechoDTO> hechosDTO = fachada.buscarHechosXColeccion(nombreColeccion);
                     hechos.addAll(
                             hechosDTO.stream()
@@ -39,6 +40,7 @@ public class Agregador {
                                         hecho.setOrigen(fuente.getId());
                                         return hecho;
                                     }).toList());
+                	}
                 } catch (NoSuchElementException e) {
                 }
             }
@@ -46,7 +48,10 @@ public class Agregador {
 
         return hechos;
     }
-
+    private boolean ColeccionEnFuente(FachadaFuente fachada , String coleccion) {
+    	List<ColeccionDTO> colecciones = fachada.colecciones();
+    	return colecciones.stream().anyMatch(dto -> dto.nombre().equals(coleccion));
+    }
     public List<Hecho> obtenerHechosPorColeccion(String nombreColeccion) {
         ConsensosEnum estrategiaEnum = tipoConsensoXColeccion.containsKey(nombreColeccion) ? tipoConsensoXColeccion.get(nombreColeccion) : ConsensosEnum.TODOS;
         List<Hecho> hechos = obtenerHechosDeTodasLasFuentes(nombreColeccion);

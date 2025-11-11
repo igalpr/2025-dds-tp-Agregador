@@ -9,7 +9,10 @@ import jakarta.persistence.Table;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Objects;
+
+import ar.edu.utn.dds.k3003.facades.dtos.CategoriaHechoEnum;
 
 @Data
 @Entity
@@ -29,8 +32,12 @@ public class Hecho {
 	@Column(name = "fecha", nullable = false)
 	private LocalDateTime fecha;
 	@Column(name = "origen", nullable = false)
-
     private String origen;
+	
+	@Column(name = "etiqueta")
+    private List<String> etiquetas;
+	private CategoriaHechoEnum categoria;
+	private EstadoHecho estado = EstadoHecho.ACTIVO;
     public Hecho() {
         // No-argument constructor
     }
@@ -41,20 +48,24 @@ public class Hecho {
     private Fuente fuente;
     
     
-    public Hecho(String id, String nombreColeccion, String titulo,  String ubicacion, LocalDateTime fecha, String origen) {
+    public Hecho(String id, String nombreColeccion, String titulo,  String ubicacion, LocalDateTime fecha, String origen,List<String> etiquetas, CategoriaHechoEnum categoria) {
         this.id = id;
         this.nombreColeccion = nombreColeccion;
         this.titulo = titulo;
         this.ubicacion = ubicacion;
         this.fecha = fecha;
         this.origen = origen;
+        this.etiquetas = etiquetas;
+        this.categoria = categoria;
     }
     public Hecho(String titulo, String id, String nombreColeccion) {
     	this.id = id;
         this.nombreColeccion = nombreColeccion;
         this.titulo = titulo;
+        this.estado = EstadoHecho.ACTIVO;
 
     }
+
     // Getters y setters
     public String getId() {
         return id;
