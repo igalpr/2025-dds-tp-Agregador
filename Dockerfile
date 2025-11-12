@@ -1,10 +1,10 @@
-# Etapa de build: Usa Maven con OpenJDK 17 (LTS)
-FROM maven:3.8.6-openjdk-17 AS build
+# Etapa de build: Usa Maven 3.9.11 con Eclipse Temurin 17 (LTS)
+FROM maven:3.9.11-eclipse-temurin-17 AS build
 COPY . .
 RUN mvn clean package -DskipTests
 
-# Etapa de runtime: Usa OpenJDK 17 slim (ligera y disponible)
-FROM openjdk:17-jdk-slim
+# Etapa de runtime: Usa Eclipse Temurin 17 JDK Alpine (ligera y mantenida)
+FROM eclipse-temurin:17-jdk-alpine
 COPY --from=build /target/my-app-name-1.0-SNAPSHOT.jar app.jar
 
 # Render asigna un puerto dinámico; expón 8080 por defecto
