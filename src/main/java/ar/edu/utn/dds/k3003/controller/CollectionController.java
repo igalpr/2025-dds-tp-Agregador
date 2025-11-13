@@ -48,8 +48,8 @@ public class CollectionController {
             int end = Math.min(start + pageable.getPageSize(), hechos.size());
             List<HechoDTO> subList = hechos.subList(start, end);
             Page<HechoDTO> hechosPage = new PageImpl<>(subList, pageable, hechos.size());
-            
-            return ResponseEntity.ok(hechosPage);
+            List<HechoDTO> content = hechosPage.getContent();
+            return ResponseEntity.ok(content);
 
         } catch (NoSuchElementException e) {
         	ColeccionNotFoundCounter.increment();
