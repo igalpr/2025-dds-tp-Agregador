@@ -5,6 +5,7 @@ import java.util.*;
 import ar.edu.utn.dds.k3003.model.Fachada.*;
 import ar.edu.utn.dds.k3003.facades.dtos.ColeccionDTO;
 import ar.edu.utn.dds.k3003.facades.dtos.HechoDTO;
+import ar.edu.utn.dds.k3003.mapper.HechoMapper;
 import ar.edu.utn.dds.k3003.model.Estrategia.*;
 import lombok.Data;
 
@@ -35,11 +36,8 @@ public class Agregador {
                     List<HechoDTO> hechosDTO = fachada.buscarHechosXColeccion(nombreColeccion);
                     hechos.addAll(
                             hechosDTO.stream()
-                                    .map(dto -> {
-                                        Hecho hecho = new Hecho(dto.titulo(), dto.id(), dto.nombreColeccion());
-                                        hecho.setOrigen(fuente.getId());
-                                        return hecho;
-                                    }).toList());
+                                    .map(HechoMapper::toEntity)  // Usar la función toEntity para mapear directamente
+                                    .toList());
                 	}
                 } catch (NoSuchElementException e) {
                 }
