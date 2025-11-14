@@ -30,7 +30,7 @@ public class Hecho {
 
 	private String ubicacion;
 	@Column(name = "fecha", nullable = false)
-	private String fecha;
+	private LocalDateTime fecha;
 	@Column(name = "origen", nullable = false)
     private String origen;
 	
@@ -53,7 +53,7 @@ public class Hecho {
         this.nombreColeccion = nombreColeccion;
         this.titulo = titulo;
         this.ubicacion = ubicacion;
-        this.fecha = fecha.toString();
+        this.fecha = fecha;
         this.origen = origen;
         this.etiquetas = etiquetas;
         this.categoria = categoria;
@@ -100,12 +100,12 @@ public class Hecho {
         this.ubicacion = ubicacion;
     }
 
-    public String getFecha() {
+    public LocalDateTime getFecha() {
         return fecha;
     }
 
     public void setFecha(LocalDateTime fecha) {
-        this.fecha = fecha.toString();
+        this.fecha = fecha;
     }
     public String getOrigen() {
         return origen;

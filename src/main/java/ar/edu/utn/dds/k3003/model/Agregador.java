@@ -43,7 +43,6 @@ public class Agregador {
                 }
             }
         }
-        Collections.sort(hechos, Comparator.comparing(Hecho::getId));
         return hechos;
     }
     private boolean ColeccionEnFuente(FachadaFuente fachada , String coleccion) {

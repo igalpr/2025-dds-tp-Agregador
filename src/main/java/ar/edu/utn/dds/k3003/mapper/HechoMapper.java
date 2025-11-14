@@ -19,7 +19,7 @@ public class HechoMapper {
                 hecho.getEtiquetas(), 
                 hecho.getCategoria(),
                 hecho.getUbicacion(),
-                LocalDateTime.parse(hecho.getFecha()),
+                hecho.getFecha(),
                 hecho.getOrigen()
         );
     }

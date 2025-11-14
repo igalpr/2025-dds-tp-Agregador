@@ -107,6 +107,8 @@ public class Fachada implements FachadaAgregador {
         if(hechosFiltrados == null || hechosFiltrados.isEmpty()) {
         	throw new NoSuchElementException("No se encontraron hechos para la coleccion : "+ coleccionId);
         }
+        Collections.sort(hechosFiltrados, Comparator.comparing(Hecho::getId));
+
         return mappearHechoADTO(hechosFiltrados);
     }
     public List<HechoDTO> mappearHechoADTO(List<Hecho> hechos) {
