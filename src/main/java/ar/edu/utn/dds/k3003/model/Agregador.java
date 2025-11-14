@@ -69,7 +69,25 @@ public class Agregador {
         contexto.setEstrategia(estrategia);
         return contexto.filtrar(hechos, listFuentes.stream().map(Fuente::getId).toList());        
     }
-
+    public List<Hecho> obtenerHechosSinSolicitudes(){
+        List<Hecho> hechosSinSolicitud = new ArrayList<>();
+        for (Fuente fuente : listFuentes) {
+            FachadaFuente fachada = fachadaFuentes.get(fuente.getId());
+            if (fachada != null) {
+                try {
+                    List<HechoDTO> hechosDTO = fachada.busqueda();
+                    hechosSinSolicitud.addAll(
+                            hechosDTO.stream()
+                            .map(HechoMapper::toEntity)  // Usar la función toEntity para mapear directamente
+                            .toList());
+                } catch (NoSuchElementException e) {
+                    continue;
+                }
+            }
+        }
+        contexto.setEstrategia(new EstrategiaTodos());
+        return contexto.filtrar(hechosSinSolicitud, listFuentes.stream().map(Fuente::getId).toList());
+    }
     public void agregarFachadaAFuente(String fuenteId, FachadaFuente fuente) {
         Fuente existeFuente = listFuentes.stream()
                 .filter(f -> f.getId().equals(fuenteId))

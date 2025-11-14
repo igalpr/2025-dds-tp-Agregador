@@ -21,7 +21,7 @@ public interface FachadaFuente {
   void setProcesadorPdI(FachadaProcesadorPdI procesador);
 
   PdIDTO agregar(PdIDTO pdIDTO) throws IllegalStateException;
-
+  List<HechoDTO> busqueda();
   List<ColeccionDTO> colecciones();
   List<HechoDTO> getHechosSinSolicitud() throws NoSuchElementException;
 }

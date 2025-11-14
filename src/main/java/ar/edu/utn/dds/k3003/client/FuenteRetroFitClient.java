@@ -6,6 +6,7 @@ import java.util.List;
 import ar.edu.utn.dds.k3003.facades.dtos.*;
 import retrofit2.Call;
 import retrofit2.http.GET;
+import retrofit2.http.POST;
 import retrofit2.http.Path;;
 
 public interface FuenteRetroFitClient{
@@ -17,4 +18,7 @@ public interface FuenteRetroFitClient{
 	
 	@GET("/hechos/sin-solicitudes")
 	Call<List<HechoDTO>> getHechosSinSolicitud();
+	
+	@POST("/busqueda")
+	Call<List<HechoDTO>> busqueda();
 }

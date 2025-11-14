@@ -111,6 +111,25 @@ public class Fachada implements FachadaAgregador {
 
         return mappearHechoADTO(hechosFiltrados);
     }
+    public List<HechoDTO> hechos() throws NoSuchElementException {
+        List<Fuente> fuentes = fuenteRepository.findAll();
+        agregador.setListFuentes(fuentes);
+        
+        for(Fuente fuente : fuentes) {
+        	if(!agregador.getFachadaFuentes().containsKey(fuente.getId())) {
+        		var proxy = new FuenteProxy(objectMapper, fuente.getEndpoint());
+        		agregador.agregarFachadaAFuente(fuente.getId(), proxy);
+                logger.info(fuente.getEndpoint());
+        	}else
+        	{
+        		logger.info("La fuente " + fuente.getId()+ " Ya se encuentra en la lista");
+        	}
+        }
+        
+        List<Hecho> hechosFiltrados = agregador.obtenerHechosSinSolicitudes();
+        Collections.sort(hechosFiltrados, Comparator.comparing(Hecho::getId));
+        return mappearHechoADTO(hechosFiltrados);
+    }
     public List<HechoDTO> mappearHechoADTO(List<Hecho> hechos) {
         return hechos.stream()
                 .map(HechoMapper::toDTO)

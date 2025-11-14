@@ -1,9 +1,6 @@
 package ar.edu.utn.dds.k3003.mapper;
 
 import ar.edu.utn.dds.k3003.model.Hecho;
-
-import java.time.LocalDateTime;
-
 import ar.edu.utn.dds.k3003.facades.dtos.HechoDTO;
 
 public class HechoMapper {

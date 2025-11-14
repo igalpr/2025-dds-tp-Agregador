@@ -114,6 +114,30 @@ public class FuenteProxy implements FachadaFuente {
 	return null;
   }
 
+  @Override
+  public List<HechoDTO> busqueda() {
+	  try {
+			var response = service.busqueda().execute();
+			if(response.isSuccessful() && response.body() != null) {
+				return response.body();
+			}
+			if(response.code() == HttpStatus.REQUEST_TIMEOUT_408) {
+				return Collections.emptyList();
+			}
+			if(response.code() ==HttpStatus.NOT_FOUND_404) {
+				throw new NotFoundException();
+			}
+			throw new RuntimeException("Error al obtener los hechos por coleccion , error " + response.code());
+
+		}catch(NotFoundException e) {
+			throw new NoSuchElementException("No se encontro la collecion en la fuente ");
+		}
+	  	catch(Exception e) {
+			logger.error(e.getMessage());
+
+			throw new RuntimeException("Fallo la comunicacion con la fuente");
+		}  }
+
   
 
 }

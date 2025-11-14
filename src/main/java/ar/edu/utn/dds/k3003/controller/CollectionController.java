@@ -28,19 +28,21 @@ public class CollectionController {
 	private final Fachada fachadaAgregador;
 	private static final Logger logger = LoggerFactory.getLogger(Fachada.class);
 	private final Counter hechosRequestCounter;
+	private final Counter hechosRequestBuscandorCounter;
 	private final Counter ColeccionNotFoundCounter;
 	private final Counter ServerErrorCounter;
 
     @Autowired
     public CollectionController(Fachada fachadaAgregador, MeterRegistry meterRegistry) {
         this.fachadaAgregador = fachadaAgregador;
+        this.hechosRequestBuscandorCounter = meterRegistry.counter("coleccion.hechos.buscador.requests");
         this.hechosRequestCounter = meterRegistry.counter("coleccion.hechos.requests");
 		this.ColeccionNotFoundCounter = meterRegistry.counter("coleccion.notfound.errors");
 		this.ServerErrorCounter = meterRegistry.counter("coleccion.server.errors");
     }
     @Timed(value = "hechos.get", description = "Time taken to return all hechos by collection")
     @GetMapping(value = "/{nombre}/hechos",produces = "application/json")
-    public ResponseEntity<?> getHechos(@PathVariable String nombre, @PageableDefault(page = 0, size = 20) Pageable pageable){
+    public ResponseEntity<?> getHechosByColection(@PathVariable String nombre, @PageableDefault(page = 0, size = 20) Pageable pageable){
     	hechosRequestCounter.increment();
     	try {
             List<HechoDTO> hechos = fachadaAgregador.hechos(nombre);
@@ -64,6 +66,25 @@ public class CollectionController {
                          "Error al procesar la solicitud"));
         }    
     }	
+    @GetMapping(value= "/hechos",produces ="application/json")
+    public ResponseEntity<?> getHechos(){
+    	hechosRequestBuscandorCounter.increment();
+    	try {
+    		List<HechoDTO> hechos = fachadaAgregador.hechos();
+            return ResponseEntity.ok(hechos);
+    	}catch (NoSuchElementException e) {
+        	ColeccionNotFoundCounter.increment();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ErrorResponse("COLLECTION_NOT_FOUND", 
+                         "No se encontro la coleccion en las fuentes disponibles"));
+        } catch (Exception e) {
+        	ServerErrorCounter.increment();
+        	logger.error(e.getMessage());
+            return ResponseEntity.internalServerError()
+                    .body(new ErrorResponse("SERVER_ERROR", 
+                         "Error al procesar la solicitud"));
+        }
+    }
 }
 
 
